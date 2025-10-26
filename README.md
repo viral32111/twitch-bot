@@ -1,13 +1,13 @@
 # Twitch Bot
 
-[![CI](https://github.com/viral32111/TwitchBot/actions/workflows/ci.yml/badge.svg)](https://github.com/viral32111/TwitchBot/actions/workflows/ci.yml)
-[![CodeQL](https://github.com/viral32111/TwitchBot/actions/workflows/codeql.yml/badge.svg)](https://github.com/viral32111/TwitchBot/actions/workflows/codeql.yml)
+[![CI](https://github.com/viral32111/twitch-bot/actions/workflows/ci.yml/badge.svg)](https://github.com/viral32111/twitch-bot/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/viral32111/twitch-bot/actions/workflows/codeql.yml/badge.svg)](https://github.com/viral32111/twitch-bot/actions/workflows/codeql.yml)
 ![GitHub tag (with filter)](https://img.shields.io/github/v/tag/viral32111/TwitchBot?label=Latest)
 ![GitHub repository size](https://img.shields.io/github/repo-size/viral32111/TwitchBot?label=Size)
 ![GitHub release downloads](https://img.shields.io/github/downloads/viral32111/TwitchBot/total?label=Downloads)
 ![GitHub commit activity](https://img.shields.io/github/commit-activity/m/viral32111/TwitchBot?label=Commits)
 
-This is my Twitch integration and chat bot, made for [Rawreltv](https://www.twitch.tv/rawreltv).
+A Twitch integration & chat bot made for [RawrelTV](https://twitch.tv/rawreltv).
 
 ## 📥 Usage
 
@@ -20,7 +20,7 @@ docker run \
 	--name twitch-bot \
 	--mount type=volume,source=twitch-bot,target=/var/lib/twitch-bot \
 	--mount type=bind,source=$PWD/config.json,target=/etc/twitch-bot.json \
-	ghcr.io/viral32111/twitchbot:latest
+	ghcr.io/viral32111/twitch-bot:latest
 ```
 
 ### ⚙️ Configuration
@@ -58,7 +58,7 @@ These secrets can be set using the `dotnet user-secrets set` command. The follow
 
 ## ⚖️ License
 
-Copyright (C) 2022-2023 [viral32111](https://viral32111.com).
+Copyright (C) 2022 [viral32111](https://viral32111.com).
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as

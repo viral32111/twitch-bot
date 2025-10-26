@@ -11,7 +11,7 @@
 		<Description>Twitch integration &amp; chat bot.</Description>
 		<Copyright>Copyright (C) 2022-2023 viral32111</Copyright>
 		<RepositoryType>git</RepositoryType>
-		<RepositoryUrl>https://github.com/viral32111/TwitchBot</RepositoryUrl>
+		<RepositoryUrl>https://github.com/viral32111/twitch-bot</RepositoryUrl>
 		<NeutralLanguage>en-GB</NeutralLanguage>
 
 		<FileVersion>0.6.0</FileVersion>
@@ -19,7 +19,7 @@
 		<AssemblyName>$(MSBuildProjectName)</AssemblyName>
 		<AssemblyVersion>$(FileVersion)</AssemblyVersion>
 
-		<PackageProjectUrl>https://github.com/viral32111/TwitchBot</PackageProjectUrl>
+		<PackageProjectUrl>https://github.com/viral32111/twitch-bot</PackageProjectUrl>
 		<PackageTags>chat; bot; oauth; twitch; integration</PackageTags>
 		<PackageLicenseExpression>AGPL-3.0-only</PackageLicenseExpression>
 

@@ -16,8 +16,8 @@ on:
   workflow_dispatch:
 
 env:
-  ARTIFACT_NAME: TwitchBot
-  DOCKER_IMAGE_NAME: twitchbot
+  ARTIFACT_NAME: twitch-bot
+  DOCKER_IMAGE_NAME: twitch-bot
   DOCKER_REGISTRY_DOMAIN: ghcr.io
 
 jobs:
@@ -116,18 +116,14 @@ jobs:
           no-cache: true
           pull: true
 
-      - name: Delete old Docker images
-        if: ${{ github.event_name != 'pull_request' && !startsWith( github.ref_name, 'dependabot/' ) }}
-        continue-on-error: true
-        uses: snok/container-retention-policy@v2
+      - name: Delete stale Docker images
+        uses: actions/delete-package-versions@v5
         with:
-          image-names: ${{ env.DOCKER_IMAGE_NAME }}
-          cut-off: 24 hours ago UTC
-          keep-at-least: 1
-          untagged-only: true
-          skip-tags: latest
-          account-type: personal
-          token: ${{ secrets.PERSONAL_ACCESS_TOKEN_PACKAGES }}
+            package-type: container
+            package-name: ${{ env.DOCKER_IMAGE_NAME }}
+            delete-only-untagged-versions: true
+            min-versions-to-keep: 4
+            ignore-versions: latest
 
   release:
     name: Release
