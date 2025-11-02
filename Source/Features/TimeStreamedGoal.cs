@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
+using Microsoft.Extensions.Logging;
+
 using TwitchBot.Twitch;
 
 namespace TwitchBot.Features;
@@ -11,99 +13,136 @@ namespace TwitchBot.Features;
 public class TimeStreamedGoal {
 
 	// Holds the data about goals for each channel
-	private static readonly Dictionary<int, TimeStreamedGoal> channelGoals = new();
+	private static readonly Dictionary<long, TimeStreamedGoal> channelGoals = new();
 
 	// Metadata about this goal
 	public readonly int TargetHours;
-	public readonly DateTime StartDate;
+	public readonly DateTime StartDateTime;
+	public readonly string FutureMessageTemplate;
 	public readonly string ProgressMessageTemplate;
-	public readonly string AchievedMessageTemplate;
-	public readonly string CompletionMessageTemplate;
+	public readonly string CompletedMessageTemplate;
+	public readonly string AnnounceMessageTemplate;
 
 	// Initialize the above metadata
-	public TimeStreamedGoal( int targetHours, DateTime startDate, string progressMessageTemplate, string achievedMessageTemplate, string completionMessageTemplate ) {
+	public TimeStreamedGoal(int targetHours, DateTime startDateTime, string futureMessageTemplate, string progressMessageTemplate, string completedMessageTemplate, string announceMessageTemplate) {
 		TargetHours = targetHours;
-		StartDate = startDate;
+		StartDateTime = startDateTime;
+
+		FutureMessageTemplate = futureMessageTemplate;
 		ProgressMessageTemplate = progressMessageTemplate;
-		AchievedMessageTemplate = achievedMessageTemplate;
-		CompletionMessageTemplate = completionMessageTemplate;
+		CompletedMessageTemplate = completedMessageTemplate;
+		AnnounceMessageTemplate = announceMessageTemplate;
 	}
 
-	[ ModuleInitializer ] // Makes this method run when the program starts
+	[ModuleInitializer] // Makes this method run when the program starts
 	public static void Setup() {
 
+		// TODO: Cannot use configuration value here yet as it is not initialized at this point
+		long channelId = 127154290; // Program.Configuration.TwitchPrimaryChannelIdentifier;
+
 		// Setup the channel goal for RawrelTV
-		// TODO: Move this to the configuration file!
-		/*channelGoals.Add( 127154290, new(
-			targetHours: 100,
-			startDate: new( 2022, 11, 1 ), // 1st of November 2022
-			progressMessageTemplate: "I am trying to stream {0} hours throughout November, so far I have streamed for {1} hours!",
-			achievedMessageTemplate: "I have achieved my goal to stream {0} hours throughout November, as so far I have streamed for {1} hours!",
-			completionMessageTemplate: "I have reached my goal of streaming {0} hours throughout November!"
-		) );*/
+		channelGoals.Add(channelId, new(
+			targetHours: 200,
+			startDateTime: new(2025, 11, 1, 0, 0, 0),
+			futureMessageTemplate: "My goal is to stream for at least {0} hours throughout November! Stay tuned for updates!",
+			progressMessageTemplate: "I have streamed {0} this month. I'm trying to stream for at least {1} hours, lets see how far we get!",
+			completedMessageTemplate: "I have streamed {0} this month. I've hit my goal of {1} hours, thank you all!",
+			announceMessageTemplate: "I have reached my goal of streaming for {0} hours throughout November!"
+		));
+		Program.Logger.LogInformation($"Added time streamed goal for channel '{channelId}'.");
 
 		// Register the chat command
-		ChatCommand.Register( GoalProgressCommand );
+		ChatCommand.Register(GoalProgressCommand);
 
+	}
+
+	// Formats a TimeSpan into a human-readable string (e.g., "5h 30m 15s")
+	private static string FormatTimeSpan(TimeSpan timeSpan) {
+		var parts = new List<string>();
+
+		int totalHours = ( int ) timeSpan.TotalHours;
+		if (totalHours > 0) parts.Add($"{totalHours} hours");
+		if (timeSpan.Minutes > 0) parts.Add($"{timeSpan.Minutes} minutes");
+		if (timeSpan.Seconds > 0 || parts.Count == 0) parts.Add($"{timeSpan.Seconds} seconds");
+
+		return string.Join(", ", parts);
 	}
 
 	// Chat command to check goal progress
-	[ ChatCommand( "goal", new string[] { "100" } ) ]
-	public static async Task GoalProgressCommand( Message message ) {
+	[ChatCommand("goal", ["time"])]
+	public static async Task GoalProgressCommand(Message message) {
 
 		// Get this channel's goal, if they have one
-		if ( !channelGoals.TryGetValue( message.Author.Channel.Identifier, out TimeStreamedGoal? goal ) ) {
-			Log.Warn( "No time streamed goal exists for channel '{0}' ({1})", message.Author.Channel.Name, message.Author.Channel.Identifier );
-			await message.Reply( "This channel has no time streamed goal." );
+		if (!channelGoals.TryGetValue(message.Author.Channel.Identifier, out TimeStreamedGoal? goal)) {
+			Program.Logger.LogWarning($"No time streamed goal exists for channel '{message.Author.Channel.Name}' ({message.Author.Channel.Identifier})");
+			await message.Reply("This channel has no time streamed goal.");
+			return;
+		}
+
+		// Is the goal's start date in the future?
+		if (DateTime.UtcNow < goal.StartDateTime) {
+			await message.Reply(string.Format(goal.FutureMessageTemplate, goal.TargetHours));
 			return;
 		}
 
 		// Get the goal progress
-		double totalHoursStreamed = await GetGoalProgress( message.Author.Channel, goal );
+		// double totalHoursStreamed = await GetGoalProgress(message.Author.Channel, goal);
+		TimeSpan totalTimeStreamed = await GetGoalProgress(message.Author.Channel, goal);
 
 		// Has the channel completed their goal?
-		if ( totalHoursStreamed >= goal.TargetHours ) {
-			await message.Reply( string.Format( goal.AchievedMessageTemplate, goal.TargetHours, totalHoursStreamed ) );
+		if (totalTimeStreamed.TotalHours >= goal.TargetHours) {
+			await message.Reply(string.Format(goal.CompletedMessageTemplate, FormatTimeSpan(totalTimeStreamed), goal.TargetHours));
 
-		// The channel has not completed their goal yet
+			// The channel has not completed their goal yet
 		} else {
-			await message.Reply( string.Format( goal.ProgressMessageTemplate, goal.TargetHours, totalHoursStreamed ) );
+			await message.Reply(string.Format(goal.ProgressMessageTemplate, FormatTimeSpan(totalTimeStreamed), goal.TargetHours));
 		}
 
 	}
 
 	// Posts a message in the channel's chat when they hit their goal
 	// NOTE: This method is meant to be called often at an interval (e.g. every 5 minutes) until the goal is completed
-	public static async Task<bool> AnnounceGoalCompletion( Channel channel ) {
+	public static async Task<bool> AnnounceGoalCompletion(Channel channel) {
 
 		// Fail if this channel does not have a goal
-		if ( !channelGoals.TryGetValue( channel.Identifier, out TimeStreamedGoal? goal ) ) throw new Exception( "Channel has no time streamed goal" );
+		if (!channelGoals.TryGetValue(channel.Identifier, out TimeStreamedGoal? goal)) throw new Exception("Channel has no time streamed goal");
 
 		// Get the goal progress
-		double totalHoursStreamed = await GetGoalProgress( channel, goal );
+		// double totalHoursStreamed = await GetGoalProgress(channel, goal);
+		TimeSpan totalTimeStreamed = await GetGoalProgress(channel, goal);
 
 		// Has the channel completed their goal?
-		if ( totalHoursStreamed >= goal.TargetHours ) {
-			await channel.SendMessage( string.Format( goal.CompletionMessageTemplate, goal.TargetHours ) );
+		if (totalTimeStreamed.TotalHours >= goal.TargetHours) {
+			await channel.SendMessage(string.Format(goal.AnnounceMessageTemplate, goal.TargetHours));
 			return true;
 
-		// The channel has not completed their goal yet
+			// The channel has not completed their goal yet
 		} else return false;
 
 	}
 
 	// Gets the progress of the current goal
-	public static async Task<double> GetGoalProgress( Channel channel, TimeStreamedGoal goal ) {
+	public static async Task<TimeSpan> GetGoalProgress(Channel channel, TimeStreamedGoal goal) {
 		Stream[] streams = await channel.FetchStreams();
-		return Math.Floor( TotalStreamDuration( streams, goal.StartDate ).TotalHours );
+
+		// return Math.Floor(TotalStreamDuration(streams, goal.StartDate).TotalHours);
+		return TotalStreamDuration(streams, goal.StartDateTime);
 	}
 
 	// Totals the duration of each stream after a goal's start date
-	public static TimeSpan TotalStreamDuration( Stream[] streams, DateTimeOffset startDate ) {
-		return streams.Aggregate( new TimeSpan( 0, 0, 0 ), ( cumulativeDuration, stream ) => {
-			if ( stream.StartedAt >= startDate ) cumulativeDuration += stream.Duration;
+	public static TimeSpan TotalStreamDuration(Stream[] streams, DateTimeOffset startDateTime) {
+		return streams.Aggregate(new TimeSpan(0, 0, 0), (cumulativeDuration, stream) => {
+			DateTimeOffset streamEndTime = stream.StartedAt + stream.Duration;
+			if (streamEndTime <= startDateTime) return cumulativeDuration; // Skip streams that ended before the goal started
+
+			// If stream started before goal, only count time from startDateTime onward
+			DateTimeOffset effectiveStart = stream.StartedAt >= startDateTime ? stream.StartedAt : startDateTime;
+			cumulativeDuration += streamEndTime - effectiveStart;
+
 			return cumulativeDuration;
-		} );
+		});
+
+
 	}
 
 }

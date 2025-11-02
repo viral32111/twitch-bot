@@ -7,7 +7,8 @@
 			"type": "process",
 			"args": [
 				"build",
-				"--configuration", "Debug",
+				"--configuration",
+				"Debug",
 				"--nologo"
 			],
 			"problemMatcher": "$msCompile"
@@ -18,7 +19,8 @@
 			"type": "process",
 			"args": [
 				"build",
-				"--configuration", "Release",
+				"--configuration",
+				"Release",
 				"--nologo"
 			],
 			"problemMatcher": "$msCompile"

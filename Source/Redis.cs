@@ -13,10 +13,10 @@ public static class Redis {
 
 	private static ConnectionMultiplexer? connection;
 	private static IDatabase? database;
-	
+
 	static Redis() {
 		if ( string.IsNullOrEmpty( Program.Configuration.RedisServerAddress ) || Program.Configuration.RedisServerPort < 0 || Program.Configuration.RedisServerPort > 65536 || string.IsNullOrEmpty( Program.Configuration.RedisUserName ) || string.IsNullOrEmpty( Program.Configuration.RedisUserPassword ) ) {
-			Log.Error( "One or more of the Redis connection details and/or Redis user credentials configuration properties are not set!" );
+			Program.Logger.LogError( "One or more of the Redis connection details and/or Redis user credentials configuration properties are not set!" );
 			Environment.Exit( 1 );
 			return;
 		}
@@ -26,7 +26,7 @@ public static class Redis {
 		connectOptions.User = Program.Configuration.RedisUserName;
 		connectOptions.Password = Program.Configuration.RedisUserPassword;
 		connectOptions.AbortOnConnectFail = false;
-		Log.Info( "Initialized Redis connection options." );
+		Program.Logger.LogInformation( "Initialized Redis connection options." );
 	}
 
 	public static async Task Open() {

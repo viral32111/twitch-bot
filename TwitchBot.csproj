@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFramework>net7.0</TargetFramework>
+		<TargetFramework>net9.0</TargetFramework>
 		<OutputType>Exe</OutputType>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>disable</ImplicitUsings>
@@ -14,7 +14,7 @@
 		<RepositoryUrl>https://github.com/viral32111/twitch-bot</RepositoryUrl>
 		<NeutralLanguage>en-GB</NeutralLanguage>
 
-		<FileVersion>0.6.0</FileVersion>
+		<FileVersion>0.6.1</FileVersion>
 		<Version>$(FileVersion)</Version>
 		<AssemblyName>$(MSBuildProjectName)</AssemblyName>
 		<AssemblyVersion>$(FileVersion)</AssemblyVersion>
@@ -44,7 +44,10 @@
 		<PackageReference Include="MongoDB.Driver" Version="2.25.0" />
 		<PackageReference Include="MySql.Data" Version="8.4.0" />
 		<PackageReference Include="StackExchange.Redis" Version="2.7.33" />
-		<PackageReference Include="viral32111.InternetRelayChat" Version="0.1.1" />
+
+		<PackageReference Include="viral32111.InternetRelayChat" Version="0.1.2" />
+		<!-- <ProjectReference Include="../InternetRelayChat/InternetRelayChat/InternetRelayChat.csproj" /> -->
+
 		<PackageReference Include="viral32111.JsonExtensions" Version="1.0.0" />
 	</ItemGroup>
 </Project>

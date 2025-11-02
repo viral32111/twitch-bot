@@ -20,11 +20,15 @@ public static class Shared {
 	public static readonly HttpClient httpClient = new();
 
 	public static UserAccessToken? UserAccessToken;
-	public static readonly string UserAccessTokenFilePath = Path.Combine( Program.Configuration.DataDirectory, "UserAccessToken.json" );
+	public static readonly string UserAccessTokenFilePath = Path.Combine(Program.Configuration.DataDirectory, "UserAccessToken.json");
 
 	public static readonly Dictionary<SslProtocols, string> SslProtocolNames = new() {
+		// We reference TLS v1.0 & v1.1 here simply for human-readable names, we are not establishing connections with these insecure protocols.
+		#pragma warning disable SYSLIB0039
 		{ SslProtocols.Tls, "TLSv1.0" },
 		{ SslProtocols.Tls11, "TLSv1.1" },
+		#pragma warning restore SYSLIB0039
+
 		{ SslProtocols.Tls12, "TLSv1.2" },
 		{ SslProtocols.Tls13, "TLSv1.3" }
 	};
@@ -42,38 +46,38 @@ public static class Shared {
 		{ CipherAlgorithmType.Rc4, "RC4" }
 	};
 
-	public static string GenerateRandomString( int length ) {
-		StringBuilder builder = new( length );
+	public static string GenerateRandomString(int length) {
+		StringBuilder builder = new(length);
 
-		for ( int i = 0; i < length; i++ ) builder.Append( randomCharacters[ RandomNumberGenerator.GetInt32( 0, randomCharacters.Length ) ] );
+		for (int i = 0; i < length; i++) builder.Append(randomCharacters[RandomNumberGenerator.GetInt32(0, randomCharacters.Length)]);
 
 		return builder.ToString();
 	}
 
 	// Checks if the current operating system is Windows
 	public static bool IsWindows() {
-		return RuntimeInformation.IsOSPlatform( OSPlatform.Windows );
+		return RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
 	}
 
 	// Creates required directories if they do not exist
 	public static void CreateDirectories() {
 
 		// Create the persistent data directory
-		if ( !Directory.Exists( Program.Configuration.DataDirectory ) ) {
-			Directory.CreateDirectory( Program.Configuration.DataDirectory );
-			Program.Logger.LogInformation( "Created data directory '{0}'.", Program.Configuration.DataDirectory );
+		if (!Directory.Exists(Program.Configuration.DataDirectory)) {
+			Directory.CreateDirectory(Program.Configuration.DataDirectory);
+			Program.Logger.LogInformation($"Created data directory '{Program.Configuration.DataDirectory}'.");
 		}
 
 		// Create the cache directory
-		if ( !Directory.Exists( Program.Configuration.CacheDirectory ) ) {
-			Directory.CreateDirectory( Program.Configuration.CacheDirectory );
-			Program.Logger.LogInformation( "Created cache directory '{0}'.", Program.Configuration.CacheDirectory );
+		if (!Directory.Exists(Program.Configuration.CacheDirectory)) {
+			Directory.CreateDirectory(Program.Configuration.CacheDirectory);
+			Program.Logger.LogInformation($"Created cache directory '{Program.Configuration.CacheDirectory}'.");
 		}
 
 	}
 
 	public static bool IsDocker() {
-		return RuntimeInformation.IsOSPlatform( OSPlatform.Linux ) && File.Exists( "/.dockerenv" );
+		return RuntimeInformation.IsOSPlatform(OSPlatform.Linux) && File.Exists("/.dockerenv");
 	}
 
 }

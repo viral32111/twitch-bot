@@ -40,7 +40,7 @@ The bot will create data over time that must be retained across reboots.
 The location of this directory can be changed in the configuration file. The default for each operating system is:
  * Windows: `%LOCALAPPDATA%/TwitchBot`
  * Linux: `/var/lib/twitch-bot`
- 
+
 ### Cached Data
 
 The bot will create temporary data over time that is reused across reboots, but can safely be destroyed when closed.
@@ -55,6 +55,10 @@ When running during development, it is preferred to keep secrets in the [.NET us
 
 These secrets can be set using the `dotnet user-secrets set` command. The following secrets are required:
  * `AppClientSecret` should be your Twitch application's client secret.
+
+1. `dotnet restore`
+2. `dotnet build --nologo --configuration Debug --no-restore`
+3. `dotnet run --nologo --configuration Debug --no-build`
 
 ## ⚖️ License
 

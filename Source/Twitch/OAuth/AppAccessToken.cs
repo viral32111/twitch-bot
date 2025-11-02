@@ -29,13 +29,13 @@ public class AppAccessToken {
 	public string Access;
 	public DateTimeOffset ExpiresAt;
 
-	public AppAccessToken( TokenType type, string access, double expiresIn ) {
+	public AppAccessToken(TokenType type, string access, double expiresIn) {
 		Type = type;
 		Access = access;
-		ExpiresAt = DateTimeOffset.UtcNow.AddSeconds( expiresIn );
+		ExpiresAt = DateTimeOffset.UtcNow.AddSeconds(expiresIn);
 	}
 
-	public AppAccessToken( TokenType type, string access, DateTimeOffset expiresAt ) {
+	public AppAccessToken(TokenType type, string access, DateTimeOffset expiresAt) {
 		Type = type;
 		Access = access;
 		ExpiresAt = expiresAt;
@@ -43,8 +43,8 @@ public class AppAccessToken {
 
 	public async Task<bool> Validate() {
 
-		Shared.httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue( "OAuth", Access );
-		HttpResponseMessage validateResponse = await Shared.httpClient.GetAsync( $"https://{Program.Configuration.TwitchOAuthBaseURL}/validate" );
+		Shared.httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("OAuth", Access);
+		HttpResponseMessage validateResponse = await Shared.httpClient.GetAsync($"{Program.Configuration.TwitchOAuthBaseURL}/validate");
 
 		//Stream responseStream = await validateResponse.Content.ReadAsStreamAsync();
 		//JsonDocument responseDocument = await JsonDocument.ParseAsync( responseStream );
@@ -60,11 +60,10 @@ public class AppAccessToken {
 	}
 
 	public AuthenticationHeaderValue GetAuthorizationHeader() {
-		if ( Type == TokenType.Bearer ) {
-			return new( "Bearer", Access );
+		if (Type == TokenType.Bearer) {
+			return new("Bearer", Access);
 		} else {
-			throw new Exception( $"Unknown token type: '{Type}'" );
+			throw new Exception($"Unknown token type '{Type}'");
 		}
 	}
 }
-

@@ -1,0 +1,114 @@
+{
+	// Title
+	"window.title": "Twitch Bot",
+
+	// Tidy when saving
+	"editor.formatOnSave": true,
+	"editor.defaultFormatter": "ms-dotnettools.csharp",
+	"editor.codeActionsOnSave": {
+		"source.organizeImports": "explicit",
+		"source.removeUnusedImports": "explicit"
+	},
+
+	// Indent with tabs by default
+	"editor.detectIndentation": true,
+	"editor.insertSpaces": false,
+	"editor.indentSize": "tabSize",
+	"editor.tabSize": 4,
+
+	// Indent with spaces in YAML files
+	"redhat.telemetry.enabled": false,
+	"[yaml]": {
+		"editor.insertSpaces": true,
+		"editor.tabSize": 2
+	},
+
+	// Force file format
+	"files.eol": "\n",
+	"files.encoding": "utf8",
+	"files.insertFinalNewline": true,
+
+	// Show & trim unnecessary whitespace
+	"editor.renderWhitespace": "boundary",
+	"editor.trimAutoWhitespace": true,
+	"files.trimTrailingWhitespace": true,
+	"files.trimFinalNewlines": true,
+
+	// Close strings, comments & brackets
+	"editor.autoClosingQuotes": "always",
+	"editor.autoClosingComments": "always",
+	"editor.autoClosingBrackets": "always",
+
+	// Show parameter names & enum values
+	"editor.inlayHints.enabled": "on",
+
+	// Disable reference count
+	"editor.codeLens": false,
+
+	// Highlight matching brackets
+	"editor.bracketPairColorization.enabled": true,
+
+	// Show color picker next to RGB/hex codes
+	"editor.colorDecorators": true,
+
+	// Smoother animations
+	"editor.smoothScrolling": true,
+	"editor.cursorBlinking": "smooth",
+	"editor.cursorStyle": "line-thin",
+	"editor.cursorSmoothCaretAnimation": "on",
+	"terminal.integrated.smoothScrolling": true,
+	"workbench.list.smoothScrolling": true,
+
+	// IntelliSense
+	"editor.inlineSuggest.enabled": true,
+
+	// Pin tabs
+	"workbench.editor.pinnedTabsOnSeparateRow": true,
+	"workbench.editor.preventPinnedEditorClose": "never",
+	"workbench.editor.pinnedTabSizing": "normal",
+	"workbench.editor.showTabs": "multiple",
+
+	// Make Copilot aware of TypeScript
+	"github.copilot.chat.languageContext.typescript.enabled": true,
+	"github.copilot.chat.edits.temporalContext.enabled": true,
+	"github.copilot.chat.editor.temporalContext.enabled": true,
+
+	// Check code, configs & docs for spelling mistakes
+	"cSpell.language": "en-GB",
+	"cSpell.files": ["**/*.cs", "**/*.md"],
+	"cSpell.words": [
+		"cloudflared",
+		"Cooldown",
+		"eventsub",
+		"keepalive",
+		"LOCALAPPDATA",
+		"PRIVMSG",
+		"Rawrel",
+		"Roundtrip",
+		"trycloudflare",
+		"unmodded",
+		"USERSTATE",
+		"vods"
+	],
+
+	// Custom colours
+	"workbench.colorCustomizations": {
+		"activityBar.activeBackground": "#9147ff",
+		"activityBar.background": "#9147ff",
+		"activityBar.foreground": "#ffffff",
+		"activityBar.inactiveForeground": "#ffffffbb",
+		"activityBarBadge.background": "#f7e7f4",
+		"activityBarBadge.foreground": "#9147ff",
+		"commandCenter.border": "#ffffff99",
+		"sash.hoverBorder": "#9147ff",
+		"statusBar.background": "#9147ff",
+		"statusBar.foreground": "#ffffff",
+		"statusBarItem.hoverBackground": "#9147ff",
+		"statusBarItem.remoteBackground": "#9147ff",
+		"statusBarItem.remoteForeground": "#ffffff",
+		"titleBar.activeBackground": "#9147ff",
+		"titleBar.activeForeground": "#ffffff",
+		"titleBar.inactiveBackground": "#9147ff99",
+		"titleBar.inactiveForeground": "#ffffff99"
+	}
+}

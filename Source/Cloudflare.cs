@@ -12,10 +12,10 @@ public static class Cloudflare {
 
 	private static Process? tunnelClient = null;
 
-	public static Uri StartTunnel( string clientVersion ) { // , short localPortNumber
+	public static Uri StartTunnel(string clientVersion) { // , short localPortNumber
 
 		ProcessStartInfo startInfo = new() {
-			FileName = GetClientPath( clientVersion ),
+			FileName = GetClientPath(clientVersion),
 			Arguments = "tunnel --no-autoupdate --loglevel info --metrics 127.0.0.1: --hello-world", // --url http://127.0.0.1:3000
 			RedirectStandardOutput = true,
 			RedirectStandardError = true,
@@ -25,21 +25,21 @@ public static class Cloudflare {
 
 		};
 
-		tunnelClient = Process.Start( startInfo );
+		tunnelClient = Process.Start(startInfo);
 
-		if ( tunnelClient == null ) throw new Exception( "Failed to start the Cloudflare Tunnel client" );
+		if (tunnelClient == null) throw new Exception("Failed to start the Cloudflare Tunnel client");
 
 		Uri? tunnelUrl = null;
 
-		while ( tunnelUrl == null && tunnelClient.StandardError.EndOfStream == false ) {
+		while (tunnelUrl == null && tunnelClient.StandardError.EndOfStream == false) {
 
 			// Read the line
 			string? line = tunnelClient.StandardError.ReadLine();
-			if ( line == null ) continue;
+			if (line == null) continue;
 
-			Match urlMatch = Regex.Match( line, @"^.*(https:\/\/.+\.trycloudflare\.com).*$" );
-			if ( urlMatch.Success ) {
-				tunnelUrl = new Uri( urlMatch.Groups[ 1 ].Value );
+			Match urlMatch = Regex.Match(line, @"^.*(https:\/\/.+\.trycloudflare\.com).*$");
+			if (urlMatch.Success) {
+				tunnelUrl = new Uri(urlMatch.Groups[1].Value);
 			}
 
 		}
@@ -60,7 +60,7 @@ public static class Cloudflare {
 
 	public static void StopTunnel() {
 
-		if ( tunnelClient == null ) throw new Exception( "Cloudflare Tunnel client not started" );
+		if (tunnelClient == null) throw new Exception("Cloudflare Tunnel client not started");
 
 		//tunnelClient.Close();
 		tunnelClient.Kill();
@@ -93,30 +93,30 @@ public static class Cloudflare {
 	}*/
 
 	// Gets the path to the executable file of the specific client version for Windows or Linux
-	public static string GetClientPath( string clientVersion ) {
-		if ( Shared.IsWindows() ) {
-			return Path.Combine( Program.Configuration.CacheDirectory, $"cloudflared-{clientVersion}-windows-amd64.exe" );
+	public static string GetClientPath(string clientVersion) {
+		if (Shared.IsWindows()) {
+			return Path.Combine(Program.Configuration.CacheDirectory, $"cloudflared-{clientVersion}-windows-amd64.exe");
 		} else {
-			return Path.Combine( Program.Configuration.CacheDirectory, $"cloudflared-{clientVersion}-linux-amd64" );
+			return Path.Combine(Program.Configuration.CacheDirectory, $"cloudflared-{clientVersion}-linux-amd64");
 		}
 	}
 
 	// Gets the GitHub release download URL of the specific client version for Windows or Linux
-	public static string GetDownloadUrl( string clientVersion ) {
+	public static string GetDownloadUrl(string clientVersion) {
 		string baseDownloadUrl = $"https://github.com/cloudflare/cloudflared/releases/download/{clientVersion}/";
 
-		if ( Shared.IsWindows() ) {
-			return string.Concat( baseDownloadUrl, "cloudflared-windows-amd64.exe" );
+		if (Shared.IsWindows()) {
+			return string.Concat(baseDownloadUrl, "cloudflared-windows-amd64.exe");
 		} else {
-			return string.Concat( baseDownloadUrl, "cloudflared-linux-amd64" );
+			return string.Concat(baseDownloadUrl, "cloudflared-linux-amd64");
 		}
 	}
 
 	// Downloads a specific version of the Cloudflare Tunnel client from GitHub
-	public async static Task DownloadClient( string clientVersion, string clientChecksum ) {
+	public async static Task DownloadClient(string clientVersion, string clientChecksum) {
 
 		// The file path to store the executable file
-		string executablePath = GetClientPath( clientVersion );
+		string executablePath = GetClientPath(clientVersion);
 
 		// Create required directories in case they do not exist
 		Shared.CreateDirectories();
@@ -125,36 +125,36 @@ public static class Cloudflare {
 		do {
 
 			// Download the specified version of the client from GitHub releases
-			HttpResponseMessage downloadResponse = await Shared.httpClient.GetAsync( GetDownloadUrl( clientVersion ) );
+			HttpResponseMessage downloadResponse = await Shared.httpClient.GetAsync(GetDownloadUrl(clientVersion));
 
 			// Save the downloaded client into an executable file in the data directory
-			using ( FileStream fileStream = new( executablePath, FileMode.Create, FileAccess.Write ) ) {
-				await downloadResponse.Content.CopyToAsync( fileStream );
+			using (FileStream fileStream = new(executablePath, FileMode.Create, FileAccess.Write)) {
+				await downloadResponse.Content.CopyToAsync(fileStream);
 			}
 
 			// ...until the executable is downloaded
-		} while ( !IsClientDownloaded( clientVersion, clientChecksum ) );
+		} while (!IsClientDownloaded(clientVersion, clientChecksum));
 
 	}
 
 	// Checks if a specific version of the client has already been downloaded
-	public static bool IsClientDownloaded( string clientVersion, string clientChecksum ) {
+	public static bool IsClientDownloaded(string clientVersion, string clientChecksum) {
 
 		// The file path to store the executable file
-		string executablePath = GetClientPath( clientVersion );
+		string executablePath = GetClientPath(clientVersion);
 
 		// Check failed if the file does not even exist
-		if ( !File.Exists( executablePath ) ) return false;
+		if (!File.Exists(executablePath)) return false;
 
 		// Validate the executable file checksum
-		using ( SHA256 sha256 = SHA256.Create() ) {
-			using ( FileStream fileStream = new( executablePath, FileMode.Open, FileAccess.Read ) ) {
+		using (SHA256 sha256 = SHA256.Create()) {
+			using (FileStream fileStream = new(executablePath, FileMode.Open, FileAccess.Read)) {
 
 				// Calculate the checksum of the executable file
-				string executableChecksum = Convert.ToHexString( sha256.ComputeHash( fileStream ) );
+				string executableChecksum = Convert.ToHexString(sha256.ComputeHash(fileStream));
 
 				// Do the checksums match?
-				return string.Equals( executableChecksum, clientChecksum, StringComparison.OrdinalIgnoreCase );
+				return string.Equals(executableChecksum, clientChecksum, StringComparison.OrdinalIgnoreCase);
 
 			}
 		}
