@@ -264,7 +264,7 @@ public class Program {
 		Logger.LogInformation($"Channel user {message.Author} in channel {message.Author.Channel} said {message}.");
 
 		// Run chat command, if this message is one
-		if (message.Content[0] == '!') {
+		if (message.Content[0] == Configuration.ChatCommandPrefix) {
 			string command = message.Content[1..];
 			if (ChatCommand.Exists(command)) await ChatCommand.Invoke(command, message);
 			else Logger.LogWarning($"Chat command '{command}' is unknown");

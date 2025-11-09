@@ -286,4 +286,10 @@ public class Configuration {
 	[JsonPropertyName("mongodb-database-name")]
 	public string MongoDBDatabaseName { get; init; } = "twitch-bot";
 
+	/// <summary>
+	/// The prefix for Twitch chat commands.
+	/// </summary>
+	[JsonPropertyName("chat-command-prefix")]
+	public char ChatCommandPrefix { get; init; } = '!';
+
 }
