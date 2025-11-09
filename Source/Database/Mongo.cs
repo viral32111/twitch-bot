@@ -43,7 +43,7 @@ public static class Mongo {
 
 		// Create the MongoDB client
 		MongoClient mongoClient = new(connectionUrl);
-		Program.Logger.LogInformation($"Initialized MongoDB client (Server: {connectionUrl.Server}', User: {connectionUrl.Username}').");
+		Program.Logger.LogInformation($"Initialized MongoDB client '{connectionUrl.Username}@{connectionUrl.Server}'.");
 
 		// Get the database
 		Database = mongoClient.GetDatabase(connectionUrl.DatabaseName);

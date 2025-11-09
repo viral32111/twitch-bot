@@ -5,17 +5,17 @@ using System.Threading.Tasks;
 namespace TwitchBot;
 
 public class WebServer {
-	private static readonly HttpListener httpListener = new();
+	public static readonly HttpListener httpListener = new();
 
-	public static async Task ListenFor(string url, Func<HttpListenerContext, Task<bool>> handleRequest, string responseMessage = "Success", string method = "GET", bool wantQueryString = false) {
-		Uri expectedUrl = new(url);
+	public static async Task ListenOnce(string url, Func<HttpListenerContext, Task<bool>> handleRequest, string responseMessage = "Success", string method = "GET", bool wantQueryString = false) {
+		Uri ourUrl = new(url);
 
-		httpListener.Prefixes.Add(url);
+		HttpListener tempHttpServer = new();
+		tempHttpServer.Prefixes.Add(url);
+		tempHttpServer.Start();
 
-		httpListener.Start();
-
-		while (httpListener.IsListening) {
-			HttpListenerContext context = await httpListener.GetContextAsync();
+		while (tempHttpServer.IsListening) {
+			HttpListenerContext context = await tempHttpServer.GetContextAsync();
 
 			string? requestMethod = context.Request?.HttpMethod;
 			string? requestPath = context.Request?.Url?.AbsolutePath;
@@ -26,7 +26,7 @@ public class WebServer {
 				continue;
 			}
 
-			if (requestPath != expectedUrl.AbsolutePath) {
+			if (requestPath != ourUrl.AbsolutePath) {
 				await context.Response.Respond(HttpStatusCode.NotFound, $"Requested path '{requestPath}' does not exist.");
 				continue;
 			}
@@ -40,7 +40,17 @@ public class WebServer {
 
 			await context.Response.Respond(HttpStatusCode.OK, responseMessage);
 
-			httpListener.Close();
+			tempHttpServer.Close();
+		}
+	}
+
+	public static async Task ListenAlways(string url, Func<HttpListenerContext, Task> handleRequest) {
+		httpListener.Prefixes.Add(url);
+		httpListener.Start();
+
+		while (httpListener.IsListening) {
+			HttpListenerContext context = await httpListener.GetContextAsync();
+			await handleRequest(context);
 		}
 	}
 }

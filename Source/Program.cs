@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Net;
+using System.Net.Mime;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -15,6 +17,7 @@ using TwitchBot.Twitch;
 using TwitchBot.Twitch.OAuth;
 
 using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.StaticFiles;
 
 namespace TwitchBot;
 
@@ -102,7 +105,7 @@ public class Program {
 
 		// Attempt to load an existing user access token from disk
 		try {
-			Logger.LogInformation($"Loading user access token from{Shared.UserAccessTokenFilePath}'...");
+			Logger.LogInformation($"Loading user access token from file '{Shared.UserAccessTokenFilePath}'...");
 			Shared.UserAccessToken = UserAccessToken.Load(Shared.UserAccessTokenFilePath);
 
 			// If the token is no longer valid, then refresh & save it
@@ -158,9 +161,60 @@ public class Program {
 		await client.OpenAsync(Configuration.TwitchChatAddress, Configuration.TwitchChatPort, true);
 		Logger.LogInformation($"Connected to Twitch chat at '{Configuration.TwitchChatAddress}:{Configuration.TwitchChatPort}'.");
 
+		// Begin the HTTP server for progress bar
+		Logger.LogDebug("Starting web server on http://localhost:4000/...");
+		Task webServer = WebServer.ListenAlways("http://localhost:4000/", OnWebServerRequest);
+		Logger.LogInformation("Started web server on http://localhost:4000/...");
+
 		// Keep the program running until we disconnect from Twitch chat
 		await client.WaitAsync();
 
+		// Wait for the web server to finish
+		WebServer.httpListener.Close();
+		await webServer;
+
+	}
+
+	// Runs when a HTTP request is received by the web server...
+	private static async Task OnWebServerRequest(HttpListenerContext context) {
+		string? requestMethod = context.Request?.HttpMethod;
+		string? requestUrl = context.Request?.Url?.ToString();
+		string? requestPath = context.Request?.Url?.AbsolutePath;
+		string? requestParameters = context.Request?.Url?.Query;
+
+		Logger.LogDebug($"HTTP {requestMethod} '{requestUrl}'");
+
+		if (requestMethod == "GET" && requestPath == "/api/progress-bar") {
+			using StreamWriter writer = new(context.Response.OutputStream);
+			await writer.WriteAsync("{ \"error\": \"Not implemented yet.\" }");
+
+			context.Response.ContentType = MediaTypeNames.Application.Json;
+			context.Response.StatusCode = ( int ) HttpStatusCode.NotImplemented;
+
+			await context.Response.OutputStream.FlushAsync();
+			context.Response.OutputStream.Close();
+
+			return;
+		}
+
+		if (requestMethod == "GET") {
+			// Determine requested file path
+			string requestFilePath = Path.Combine(Configuration.DataDirectory, "web-server", requestPath?.TrimStart('/') ?? "index.html");
+			if (!File.Exists(requestFilePath)) {
+				await context.Response.Respond(HttpStatusCode.NotFound, "404. that page does NOT exist!!");
+				return;
+			}
+
+			// Serve the requested file
+			using FileStream fileStream = File.OpenRead(requestFilePath);
+			context.Response.ContentType = new FileExtensionContentTypeProvider().TryGetContentType(requestFilePath, out string? contentType) ? contentType : MediaTypeNames.Application.Octet;
+			context.Response.ContentLength64 = fileStream.Length;
+			await fileStream.CopyToAsync(context.Response.OutputStream);
+			context.Response.OutputStream.Close();
+			return;
+		}
+
+		await context.Response.Respond(HttpStatusCode.MethodNotAllowed, "405. ur doing it wrong :(");
 	}
 
 	private static bool OnApplicationExit(CtrlType signal) {

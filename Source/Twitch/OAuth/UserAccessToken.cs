@@ -90,7 +90,7 @@ public class UserAccessToken : AppAccessToken {
 
 		Program.Logger.LogInformation("Waiting for the authorization to complete...");
 		string? authorizationCode = null;
-		await WebServer.ListenFor(Program.Configuration.TwitchOAuthRedirectURL, async (HttpListenerContext context) => {
+		await WebServer.ListenOnce(Program.Configuration.TwitchOAuthRedirectURL, async (HttpListenerContext context) => {
 
 			NameValueCollection collection = HttpUtility.ParseQueryString(context.Request!.Url!.Query);
 
