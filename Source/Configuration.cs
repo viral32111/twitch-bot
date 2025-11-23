@@ -217,7 +217,22 @@ public class Configuration {
 	/// https://dev.twitch.tv/docs/authentication/scopes/
 	/// </summary>
 	[JsonPropertyName("twitch-oauth-scopes")]
-	public string[] TwitchOAuthScopes { get; init; } = ["chat:read", "chat:edit"];
+	public string[] TwitchOAuthScopes { get; init; } = [
+		"user:bot",
+		"user:read:email",
+		"user:read:broadcast",
+		"user:read:chat",
+		"user:edit",
+		"user:edit:broadcast",
+		"chat:edit",
+		"chat:read",
+		"channel:moderate",
+		"channel:bot",
+		"moderator:read:chatters",
+		"moderator:read:chat_messages",
+		"moderator:read:followers",
+		"moderator:read:moderators"
+	];
 
 	/// <summary>
 	/// The IP address of the Twitch chat IRC server.

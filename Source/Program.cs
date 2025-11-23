@@ -127,6 +127,15 @@ public class Program {
 			Shared.UserAccessToken.Save(Shared.UserAccessTokenFilePath);
 		}
 
+		// If the scopes have changed, we need to re-authorize
+		string[] currentScopes = Shared.UserAccessToken.Scopes;
+		string[] requiredScopes = Configuration.TwitchOAuthScopes;
+		if (!requiredScopes.All(scope => currentScopes.Contains(scope))) {
+			Logger.LogWarning("The user access token does not have all of the required scopes, requesting fresh token...");
+			Shared.UserAccessToken = await UserAccessToken.RequestAuthorization(Configuration.TwitchOAuthRedirectURL, Configuration.TwitchOAuthScopes);
+			Shared.UserAccessToken.Save(Shared.UserAccessTokenFilePath);
+		}
+
 		// Fetch this account's information
 		client.User = await GlobalUser.FetchFromAPI();
 		Logger.LogInformation($"I am {client.User}.");
