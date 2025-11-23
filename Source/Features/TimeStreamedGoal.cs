@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 
 using TwitchBot.Twitch;
+using System.Threading;
 
 namespace TwitchBot.Features;
 
@@ -174,6 +175,43 @@ public class TimeStreamedGoal {
 			return cumulativeDuration;
 		});
 
+	}
+
+	// Runs in the background to update a channel's title with remaining hours
+	public static async Task UpdateTitleWithRemainingHours(Channel channel) {
+		PeriodicTimer UpdateTitleTimer = new(TimeSpan.FromMinutes(1));
+
+		Program.Logger.LogInformation($"Started updating title of channel {channel}...");
+
+		while (await UpdateTitleTimer.WaitForNextTickAsync()) {
+			Program.Logger.LogDebug($"Updating title for channel {channel} with remaining hours...");
+
+			// Get this channel's goal, if they have one
+			if (!channelGoals.TryGetValue(channel.Identifier, out TimeStreamedGoal? goal)) {
+				Program.Logger.LogWarning($"Skipping title update, no time streamed goal exists for channel '{channel.Name}' ({channel.Identifier})");
+				continue;
+			}
+
+			// Get the goal progress
+			TimeSpan totalTimeStreamed = await GetGoalProgress(channel, goal);
+			double remainingHours = Math.Ceiling(Math.Max(0, goal.TargetHours - totalTimeStreamed.TotalHours));
+			Program.Logger.LogDebug($"Channel {channel} has {remainingHours} hour(s) remaining to hit their goal of {goal.TargetHours} hour(s).");
+
+			// Get the channel's title & prepare the new title
+			string currentTitle = (await channel.FetchInformation())["title"]!.GetValue<string>();
+			string originalTitle = System.Text.RegularExpressions.Regex.Replace(currentTitle, @"^\d+hrs left, !time \| ", "").Trim();
+			string newTitle = $"{remainingHours}hrs left, !time | {originalTitle}";
+
+			// If they're the same, skip updating
+			if (newTitle == currentTitle) {
+				Program.Logger.LogDebug($"Title for channel {channel} is already up-to-date ({newTitle}), skipping update...");
+				continue;
+			}
+
+			// Update the title with the remaining hours
+			await channel.UpdateTitle(newTitle);
+			Program.Logger.LogInformation($"Updated channel {channel} title to '{newTitle}' (was '{newTitle}').");
+		}
 	}
 
 }

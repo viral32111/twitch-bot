@@ -15,6 +15,7 @@ using TwitchBot.Twitch;
 using TwitchBot.Twitch.OAuth;
 
 using Microsoft.Extensions.Logging;
+using TwitchBot.Features;
 
 namespace TwitchBot;
 
@@ -29,6 +30,8 @@ public class Program {
 	/// Global instance of a logger.
 	/// </summary>
 	public static ILogger Logger = Log.CreateLogger("TwitchBot");
+
+	private static Task? UpdateTitleTask;
 
 	// Windows-only
 	[DllImport("Kernel32")]
@@ -182,6 +185,13 @@ public class Program {
 		//Logger.LogInformation( "Closing EventSub WebSocket connection..." );
 		//eventSubClient.CloseAsync( WebSocketCloseStatus.NormalClosure, CancellationToken.None ).Wait();
 
+		// Stop the update title task
+		if (UpdateTitleTask != null) {
+			Logger.LogDebug("Stopping update title background task...");
+			UpdateTitleTask.Wait();
+			Logger.LogInformation("Stopped update title background task.");
+		}
+
 		// Close chat connection
 		Logger.LogDebug("Disconnecting...");
 		client.CloseAsync().Wait();
@@ -239,9 +249,9 @@ public class Program {
 		if (await client.JoinChannel(primaryChannel)) {
 			Logger.LogInformation($"Joined primary channel {primaryChannel}.");
 
-			//await eventSubClient.ConnectAsync( Configuration.TwitchEventSubWebSocketURL, new( 0, 0, 10 ), CancellationToken.None );
+			// await eventSubClient.ConnectAsync( Configuration.TwitchEventSubWebSocketURL, new( 0, 0, 10 ), CancellationToken.None );
 
-			// TODO: Start time streamed goal thing
+			UpdateTitleTask = TimeStreamedGoal.UpdateTitleWithRemainingHours(primaryChannel);
 
 		} else {
 			Logger.LogError("Failed to join primary channel!");

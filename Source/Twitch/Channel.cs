@@ -6,6 +6,7 @@ using System.Collections.Generic;
 
 using MongoDB.Driver;
 using Microsoft.Extensions.Logging;
+using System.Net.Http;
 
 /* Channel Tags:
 room-id=127154290
@@ -208,7 +209,24 @@ public class Channel {
 		// Add all the active live streams to the database, or update if they already exist
 		foreach (Stream stream in streams) await stream.DatabaseUpdate(insertIfMissing: true);
 
+	}
 
+	// https://dev.twitch.tv/docs/api/reference/#get-channel-information
+	public async Task<JsonObject> FetchInformation() {
+		JsonObject response = await API.Request("channels", queryParameters: new() {
+			{ "broadcaster_id", Identifier.ToString() }
+		});
+
+		return response["data"]![0]!.AsObject();
+	}
+
+	// https://dev.twitch.tv/docs/api/reference/#modify-channel-information
+	public async Task<JsonObject> UpdateTitle(string title) {
+		return await API.Request("channels", method: HttpMethod.Patch, queryParameters: new() {
+			{ "broadcaster_id", Identifier.ToString() }
+		}, new() {
+			{ "title", title }
+		});
 	}
 
 }
