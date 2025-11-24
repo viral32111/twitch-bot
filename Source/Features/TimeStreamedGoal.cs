@@ -49,11 +49,11 @@ public class TimeStreamedGoal {
 		// Setup the channel goal for RawrelTV
 		channelGoals.Add(channelId, new(
 			targetHours: 200,
-			dailyTargetHours: 6,
+			dailyTargetHours: 8,
 			startDateTime: new(2025, 11, 1, 0, 0, 0),
 			futureMessageTemplate: "My goal is to stream for at least {0} hours throughout November! Stay tuned for updates!",
 			monthProgressMessageTemplate: "I have streamed {0} this month. I'm trying to stream for at least {1} hours, lets see how far we get!",
-			dayProgressMessageTemplate: "I have streamed {0} this month. I'm trying to stream for at least {1} hours, lets see how far we get! I've got another {4} left to stream today.",
+			dayProgressMessageTemplate: "I have streamed {0} this month. I'm trying to stream for at least {1} hours, lets see how far we get! I've got another {2} left to stream today.",
 			completedMessageTemplate: "I have streamed {0} this month. I've hit my goal of {1} hours, thank you all!",
 			announceMessageTemplate: "I have reached my goal of streaming for {0} hours throughout November!"
 		));
@@ -65,13 +65,13 @@ public class TimeStreamedGoal {
 	}
 
 	// Formats a TimeSpan into a human-readable string (e.g., "5h 30m 15s")
-	private static string FormatTimeSpan(TimeSpan timeSpan) {
+	private static string FormatTimeSpan(TimeSpan timeSpan, bool includeSeconds = false) {
 		var parts = new List<string>();
 
 		int totalHours = ( int ) timeSpan.TotalHours;
 		if (totalHours > 0) parts.Add($"{totalHours} hours");
 		if (timeSpan.Minutes > 0) parts.Add($"{timeSpan.Minutes} minutes");
-		if (timeSpan.Seconds > 0 || parts.Count == 0) parts.Add($"{timeSpan.Seconds} seconds");
+		if (includeSeconds && timeSpan.Seconds > 0 || parts.Count == 0) parts.Add($"{timeSpan.Seconds} seconds");
 
 		return string.Join(", ", parts);
 	}
@@ -116,18 +116,23 @@ public class TimeStreamedGoal {
 		// Get the goal progress
 		Stream[] streams = await message.Author.Channel.FetchStreams();
 		TimeSpan totalTimeStreamed = TotalStreamDuration(streams, goal.StartDateTime);
+		Program.Logger.LogDebug($"totalTimeStreamed: {totalTimeStreamed}");
 		TimeSpan todayRemaining = TimeSpan.FromHours(goal.DailyTargetHours) - GetTodayStreamTime(streams);
+		Program.Logger.LogDebug($"todayRemaining: {todayRemaining}");
 
 		// Has the channel completed their goal?
 		if (totalTimeStreamed.TotalHours >= goal.TargetHours) {
+			Program.Logger.LogDebug($"a");
 			await message.Reply(string.Format(goal.CompletedMessageTemplate, FormatTimeSpan(totalTimeStreamed), goal.TargetHours));
 
 			// The channel has not completed their goal yet, and there is remaining time to stream today
 		} else if (todayRemaining.TotalSeconds > 0) {
+			Program.Logger.LogDebug($"B");
 			await message.Reply(string.Format(goal.DayProgressMessageTemplate, FormatTimeSpan(totalTimeStreamed), goal.TargetHours, FormatTimeSpan(todayRemaining)));
 
 			// The channel has not completed their goal yet
 		} else {
+			Program.Logger.LogDebug($"C");
 			await message.Reply(string.Format(goal.MonthProgressMessageTemplate, FormatTimeSpan(totalTimeStreamed), goal.TargetHours));
 		}
 
@@ -179,7 +184,7 @@ public class TimeStreamedGoal {
 
 	// Runs in the background to update a channel's title with remaining hours
 	public static async Task UpdateTitleWithRemainingHours(Channel channel) {
-		PeriodicTimer UpdateTitleTimer = new(TimeSpan.FromMinutes(1));
+		PeriodicTimer UpdateTitleTimer = new(TimeSpan.FromMinutes(5));
 
 		Program.Logger.LogInformation($"Started updating title of channel {channel}...");
 

@@ -19,8 +19,11 @@ public static class Shared {
 	public static readonly Random RandomGenerator = new();
 	public static readonly HttpClient httpClient = new();
 
-	public static UserAccessToken? UserAccessToken;
-	public static readonly string UserAccessTokenFilePath = Path.Combine(Program.Configuration.DataDirectory, "UserAccessToken.json");
+	public static UserAccessToken? BotAccessToken;
+	public static readonly string BotAccessTokenFilePath = Path.Combine(Program.Configuration.DataDirectory, "UserAccessToken.json"); // Old file name for backwards-compatibility
+
+	public static UserAccessToken? BroadcasterAccessToken;
+	public static readonly string BroadcasterAccessTokenFilePath = Path.Combine(Program.Configuration.DataDirectory, "BroadcasterAccessToken.json");
 
 	public static readonly Dictionary<SslProtocols, string> SslProtocolNames = new() {
 		// We reference TLS v1.0 & v1.1 here simply for human-readable names, we are not establishing connections with these insecure protocols.

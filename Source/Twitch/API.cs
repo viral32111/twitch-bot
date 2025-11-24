@@ -12,7 +12,7 @@ using Microsoft.Extensions.Logging;
 namespace TwitchBot.Twitch;
 
 public static class API {
-	public async static Task<JsonObject> Request(string endpoint, HttpMethod? method = null, Dictionary<string, string>? queryParameters = null, JsonObject? payload = null, int retryCounter = 0) {
+	public async static Task<JsonObject> Request(string endpoint, HttpMethod? method = null, Dictionary<string, string>? queryParameters = null, JsonObject? payload = null, Dictionary<string, string>? headers = null, int retryCounter = 0) {
 
 		// Construct the URL
 		string queryString = queryParameters != null ? $"?{queryParameters.ToQueryString()}" : "";
@@ -24,28 +24,23 @@ public static class API {
 		// Always expect a JSON response
 		httpRequest.Headers.Accept.Add(MediaTypeWithQualityHeaderValue.Parse("application/json"));
 
-		// Add the OAuth credentials as headers
-		httpRequest.Headers.Add("Client-Id", Program.Configuration.TwitchOAuthClientIdentifier);
-		httpRequest.Headers.Authorization = Shared.UserAccessToken!.GetAuthorizationHeader();
+		// Add any additional headers
+		if (headers != null) {
+			foreach (var header in headers) {
+				if (header.Key == "Authorization") {
+					httpRequest.Headers.Authorization = AuthenticationHeaderValue.Parse(header.Value);
+				} else {
+					httpRequest.Headers.Add(header.Key, header.Value);
+				}
+			}
+		}
 
 		// Set the request body, if one is provided
 		if (payload != null) httpRequest.Content = new StringContent(payload.ToJsonString(), Encoding.UTF8, "application/json");
 
-		// Send the request & make sure to retry when it fails due to token expiry
+		// Send the request
 		HttpResponseMessage httpResponse = await Shared.httpClient.SendAsync(httpRequest);
 		Program.Logger.LogTrace($"{httpRequest.Method} '{httpRequest.RequestUri?.ToString()}' '{payload?.ToJsonString()}' => {( int ) httpResponse.StatusCode} {httpResponse.StatusCode}");
-		if (httpResponse.StatusCode == HttpStatusCode.Unauthorized) {
-			if (retryCounter >= 1) throw new Exception($"API request '{method}' '{endpoint}' failed due to unauthorized access even after refreshing the token!");
-
-			Program.Logger.LogWarning("User access token has expired, refreshing & saving...");
-			await Shared.UserAccessToken.DoRefresh();
-			Shared.UserAccessToken.Save(Shared.UserAccessTokenFilePath);
-
-			Program.Logger.LogInformation($"Retrying API request '{method}' '{endpoint}' in 10 seconds...");
-			await Task.Delay(10000);
-
-			return await Request(endpoint, method, queryParameters, payload, retryCounter + 1);
-		}
 
 		// We do not want to continue if the response is not successful
 		httpResponse.EnsureSuccessStatusCode();
@@ -59,4 +54,51 @@ public static class API {
 		return responseJson.AsObject();
 
 	}
+
+	public async static Task<JsonObject> BotRequest(string endpoint, HttpMethod? method = null, Dictionary<string, string>? queryParameters = null, JsonObject? payload = null, int retryCounter = 0) {
+
+		Dictionary<string, string> oauthHeaders = new() {
+			{ "Client-Id", Program.Configuration.TwitchOAuthClientIdentifier },
+			{ "Authorization", Shared.BotAccessToken!.GetAuthorizationHeader().ToString() }
+		};
+
+		try {
+			return await Request(endpoint, method, queryParameters, payload, oauthHeaders, retryCounter);
+		} catch (HttpRequestException ex) when (ex.StatusCode == HttpStatusCode.Unauthorized) {
+			if (retryCounter >= 1) throw new Exception($"Bot API request '{method}' '{endpoint}' failed due to unauthorized access even after refreshing the token!");
+
+			Program.Logger.LogWarning("Bot access token has expired, refreshing & saving...");
+			await Shared.BotAccessToken.DoRefresh();
+			Shared.BotAccessToken.Save(Shared.BotAccessTokenFilePath);
+
+			Program.Logger.LogInformation($"Retrying API request '{method}' '{endpoint}' in 10 seconds...");
+			await Task.Delay(10000);
+
+			return await BotRequest(endpoint, method, queryParameters, payload, retryCounter + 1);
+		}
+	}
+
+	public async static Task<JsonObject> BroadcasterRequest(string endpoint, HttpMethod? method = null, Dictionary<string, string>? queryParameters = null, JsonObject? payload = null, int retryCounter = 0) {
+
+		Dictionary<string, string> oauthHeaders = new() {
+			{ "Client-Id", Program.Configuration.TwitchOAuthClientIdentifier },
+			{ "Authorization", Shared.BroadcasterAccessToken!.GetAuthorizationHeader().ToString() }
+		};
+
+		try {
+			return await Request(endpoint, method, queryParameters, payload, oauthHeaders, retryCounter);
+		} catch (HttpRequestException ex) when (ex.StatusCode == HttpStatusCode.Unauthorized) {
+			if (retryCounter >= 1) throw new Exception($"Broadcaster API request '{method}' '{endpoint}' failed due to unauthorized access even after refreshing the token!");
+
+			Program.Logger.LogWarning("Broadcaster access token has expired, refreshing & saving...");
+			await Shared.BroadcasterAccessToken.DoRefresh();
+			Shared.BroadcasterAccessToken.Save(Shared.BroadcasterAccessTokenFilePath);
+
+			Program.Logger.LogInformation($"Retrying API request '{method}' '{endpoint}' in 10 seconds...");
+			await Task.Delay(10000);
+
+			return await BroadcasterRequest(endpoint, method, queryParameters, payload, retryCounter + 1);
+		}
+	}
+
 }

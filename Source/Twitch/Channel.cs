@@ -92,12 +92,12 @@ public class Channel {
 	public static async Task<Channel> FetchFromAPI(long identifier, Client client) {
 
 		// Fetch information about this channel from the Twitch API
-		JsonObject channelInfoResponse = await API.Request("channels", queryParameters: new() {
+		JsonObject channelInfoResponse = await API.BotRequest("channels", queryParameters: new() {
 			{ "broadcaster_id", identifier.ToString() }
 		});
 
 		// Fetch chat settings for this channel from the Twitch API
-		JsonObject chatSettingsResponse = await API.Request("chat/settings", queryParameters: new() {
+		JsonObject chatSettingsResponse = await API.BotRequest("chat/settings", queryParameters: new() {
 			{ "broadcaster_id", identifier.ToString() },
 			{ "moderator_id", client.User!.Identifier.ToString() },
 		});
@@ -170,7 +170,7 @@ public class Channel {
 		do {
 
 			// Fetch a list of the latest VODs for this channel from the Twitch API
-			JsonObject vodsResponse = await API.Request("videos", queryParameters: new() {
+			JsonObject vodsResponse = await API.BotRequest("videos", queryParameters: new() {
 				{ "user_id", Identifier.ToString() },
 				{ "type", "archive" },
 				{ "period", "all" },
@@ -197,7 +197,7 @@ public class Channel {
 	public async Task UpdateActiveLiveStreamsInDatabase() {
 
 		// Fetch a list of the current streams for this channel from the Twitch API
-		JsonObject streamsResponse = await API.Request("streams", queryParameters: new() {
+		JsonObject streamsResponse = await API.BotRequest("streams", queryParameters: new() {
 			{ "user_id", Identifier.ToString() },
 			{ "type", "live" },
 			{ "first", "1" }, // Only one live stream can exist at a time for a channel (I think?)
@@ -213,7 +213,7 @@ public class Channel {
 
 	// https://dev.twitch.tv/docs/api/reference/#get-channel-information
 	public async Task<JsonObject> FetchInformation() {
-		JsonObject response = await API.Request("channels", queryParameters: new() {
+		JsonObject response = await API.BotRequest("channels", queryParameters: new() {
 			{ "broadcaster_id", Identifier.ToString() }
 		});
 
@@ -222,7 +222,7 @@ public class Channel {
 
 	// https://dev.twitch.tv/docs/api/reference/#modify-channel-information
 	public async Task<JsonObject> UpdateTitle(string title) {
-		return await API.Request("channels", method: HttpMethod.Patch, queryParameters: new() {
+		return await API.BroadcasterRequest("channels", method: HttpMethod.Patch, queryParameters: new() {
 			{ "broadcaster_id", Identifier.ToString() }
 		}, new() {
 			{ "title", title }

@@ -103,38 +103,68 @@ public class Program {
 		Logger.LogInformation( "Connected to Redis." );
 		*/
 
-		// Attempt to load an existing user access token from disk
+		/**********************************************************************/
+
+		// Attempt to load an existing broadcaster access token from disk
 		try {
-			Logger.LogInformation($"Loading user access token from{Shared.UserAccessTokenFilePath}'...");
-			Shared.UserAccessToken = UserAccessToken.Load(Shared.UserAccessTokenFilePath);
+			Logger.LogInformation($"Loading broadcaster access token from '{Shared.BotAccessTokenFilePath}'...");
+			Shared.BotAccessToken = UserAccessToken.Load(Shared.BotAccessTokenFilePath);
 
 			// If the token is no longer valid, then refresh & save it
-			if (!await Shared.UserAccessToken.Validate()) {
+			if (!await Shared.BotAccessToken.Validate()) {
 
-				Logger.LogWarning("The user access token is no longer valid, refreshing it...");
-				await Shared.UserAccessToken.DoRefresh();
+				Logger.LogWarning("The broadcaster access token is no longer valid, refreshing it...");
+				await Shared.BotAccessToken.DoRefresh();
 
-				Logger.LogInformation("Saving the refreshed user access token...");
-				Shared.UserAccessToken.Save(Shared.UserAccessTokenFilePath);
+				Logger.LogInformation("Saving the refreshed broadcaster access token...");
+				Shared.BotAccessToken.Save(Shared.BotAccessTokenFilePath);
 
 			} else {
-				Logger.LogInformation("The user access token is still valid, no refresh required.");
+				Logger.LogInformation("The broadcaster access token is still valid, no refresh required.");
 			}
 
 		} catch (FileNotFoundException) {
-			Logger.LogWarning("User access token file does not exist, requesting fresh token...");
-			Shared.UserAccessToken = await UserAccessToken.RequestAuthorization(Configuration.TwitchOAuthRedirectURL, Configuration.TwitchOAuthScopes);
-			Shared.UserAccessToken.Save(Shared.UserAccessTokenFilePath);
+			Logger.LogWarning($"Broadcaster access token file '{Shared.BotAccessTokenFilePath}' does not exist, requesting fresh token...");
+			Shared.BotAccessToken = await UserAccessToken.RequestAuthorization(Configuration.TwitchOAuthRedirectURL, Configuration.TwitchOAuthScopes);
+			Shared.BotAccessToken.Save(Shared.BotAccessTokenFilePath);
+		}
+
+		/**********************************************************************/
+
+		// Attempt to load an existing broadcaster access token from disk
+		try {
+			Logger.LogInformation($"Loading broadcaster access token from '{Shared.BroadcasterAccessTokenFilePath}'...");
+			Shared.BroadcasterAccessToken = UserAccessToken.Load(Shared.BroadcasterAccessTokenFilePath);
+
+			// If the token is no longer valid, then refresh & save it
+			if (!await Shared.BroadcasterAccessToken.Validate()) {
+
+				Logger.LogWarning("The broadcaster access token is no longer valid, refreshing it...");
+				await Shared.BroadcasterAccessToken.DoRefresh();
+
+				Logger.LogInformation("Saving the refreshed broadcaster access token...");
+				Shared.BroadcasterAccessToken.Save(Shared.BroadcasterAccessTokenFilePath);
+
+			} else {
+				Logger.LogInformation("The broadcaster access token is still valid, no refresh required.");
+			}
+
+		} catch (FileNotFoundException) {
+			Logger.LogWarning($"Broadcaster access token file '{Shared.BroadcasterAccessTokenFilePath}' does not exist, requesting fresh token...");
+			Shared.BroadcasterAccessToken = await UserAccessToken.RequestAuthorization(Configuration.TwitchOAuthRedirectURL, Configuration.TwitchOAuthScopes);
+			Shared.BroadcasterAccessToken.Save(Shared.BroadcasterAccessTokenFilePath);
 		}
 
 		// If the scopes have changed, we need to re-authorize
-		string[] currentScopes = Shared.UserAccessToken.Scopes;
+		string[] currentScopes = Shared.BroadcasterAccessToken.Scopes;
 		string[] requiredScopes = Configuration.TwitchOAuthScopes;
 		if (!requiredScopes.All(scope => currentScopes.Contains(scope))) {
-			Logger.LogWarning("The user access token does not have all of the required scopes, requesting fresh token...");
-			Shared.UserAccessToken = await UserAccessToken.RequestAuthorization(Configuration.TwitchOAuthRedirectURL, Configuration.TwitchOAuthScopes);
-			Shared.UserAccessToken.Save(Shared.UserAccessTokenFilePath);
+			Logger.LogWarning("The broadcaster access token does not have all of the required scopes, requesting fresh token...");
+			Shared.BroadcasterAccessToken = await UserAccessToken.RequestAuthorization(Configuration.TwitchOAuthRedirectURL, Configuration.TwitchOAuthScopes);
+			Shared.BroadcasterAccessToken.Save(Shared.BroadcasterAccessTokenFilePath);
 		}
+
+		/**********************************************************************/
 
 		// Fetch this account's information
 		client.User = await GlobalUser.FetchFromAPI();
@@ -225,7 +255,7 @@ public class Program {
 
 	// Fires after the underlying connection is ready (i.e. TLS established & receiving data)
 	private static async void OnOpen(object sender, OpenedEventArgs e) {
-		if (Shared.UserAccessToken == null) throw new Exception("Open event ran without previously fetching user access token");
+		if (Shared.BotAccessToken == null) throw new Exception("Open event ran without previously fetching user access token");
 
 		// Request all of Twitch's IRC capabilities
 		Logger.LogDebug("Requesting capabilities...");
@@ -238,7 +268,7 @@ public class Program {
 
 		// Send our credentials to authenticate
 		Logger.LogDebug("Authenticating...");
-		if (await client.Authenticate(client.User!.DisplayName, Shared.UserAccessToken.Access)) {
+		if (await client.Authenticate(client.User!.DisplayName, Shared.BotAccessToken.Access)) {
 			Logger.LogInformation($"Authenticated with Twitch chat as user {client.User}.");
 		} else {
 			Logger.LogError($"Failed to authenticate as user {client.User}!");

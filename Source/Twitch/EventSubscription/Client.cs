@@ -56,7 +56,7 @@ public class Client {
 
 	// Subscribes to an event, should only be done once we're ready
 	public async Task SubscribeAsync(string subscriptionType, JsonObject condition) {
-		await API.Request("eventsub/subscriptions", HttpMethod.Post, payload: new() {
+		await API.BotRequest("eventsub/subscriptions", HttpMethod.Post, payload: new() {
 			{ "type", subscriptionType },
 			{ "version", 1 },
 			{ "condition", condition },

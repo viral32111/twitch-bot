@@ -51,7 +51,7 @@ public class GlobalUser {
 	// Creates a global user by fetching the required data from the Twitch API, using an identifier
 	// NOTE: Not specifying an identifier will fetch the current user (i.e. this bot's account)
 	public static async Task<GlobalUser> FetchFromAPI(int? identifier = null) {
-		JsonObject usersResponse = await API.Request("users", queryParameters: identifier != null ? new() {
+		JsonObject usersResponse = await API.BotRequest("users", queryParameters: identifier != null ? new() {
 			{ "id", identifier.ToString()! }
 		} : null);
 
@@ -60,7 +60,7 @@ public class GlobalUser {
 
 	// Creates a global user by fetching the required data from the Twitch API, using a login name
 	public static async Task<GlobalUser> FetchFromAPI(string loginName) {
-		JsonObject usersResponse = await API.Request("users", queryParameters: new() {
+		JsonObject usersResponse = await API.BotRequest("users", queryParameters: new() {
 			{ "login", loginName }
 		});
 
