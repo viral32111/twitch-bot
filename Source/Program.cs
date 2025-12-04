@@ -290,7 +290,7 @@ public class Program {
 
 			// await eventSubClient.ConnectAsync( Configuration.TwitchEventSubWebSocketURL, new( 0, 0, 10 ), CancellationToken.None );
 
-			UpdateTitleTask = TimeStreamedGoal.UpdateTitleWithRemainingHours(primaryChannel);
+			// UpdateTitleTask = TimeStreamedGoal.UpdateTitleWithRemainingHours(primaryChannel);
 
 		} else {
 			Logger.LogError("Failed to join primary channel!");
