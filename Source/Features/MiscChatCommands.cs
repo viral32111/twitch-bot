@@ -16,6 +16,7 @@ public class MiscChatCommands {
 		ChatCommand.Register(ApertureScienceCommand);
 		ChatCommand.Register(SocialMediaCommand);
 		ChatCommand.Register(WhoAmICommand);
+		ChatCommand.Register(PayPalCommand);
 
 	}
 
@@ -42,6 +43,11 @@ public class MiscChatCommands {
 	[ChatCommand("whoami")]
 	public static async Task WhoAmICommand(Message message) {
 		await message.Reply($"You are {message.Author.Global.DisplayName}, your name color is {message.Author.Global.NameColor}, your account identifier is {message.Author.Global.Identifier}, you are {(message.Author.IsSubscriber == true ? "subscribed" : "not subscribed")}, you are {(message.Author.IsModerator == true ? "a moderator" : "not a moderator")}.");
+	}
+
+	[ChatCommand("paypal", new string[] { "donate" })]
+	public static async Task PayPalCommand(Message message) {
+		await message.Reply($"If you'd like to support the channel, you can donate via PayPal! https://paypal.me/rawreltv");
 	}
 
 }
