@@ -53,7 +53,7 @@ public class MiscChatCommands {
 
 	[ChatCommand("mods")]
 	public static async Task ModsCommand(Message message) {
-		await message.Reply($"Rawrel is playing with Pyanodons Modpack, Squeak Through 2, Pipe Visualization Overlay, Milestones, LTN Manager, LTN - Logistics Train Network, Factorio Libary, and Even Distribution Disco Science.");
+		await message.Reply($"Rawrel is playing with Pyanodons Modpack, Squeak Through 2, Pipe Visualization Overlay, Milestones, LTN Manager, LTN - Logistics Train Network, Factorio Libary, Even Distribution, and Disco Science.");
 	}
 
 }
