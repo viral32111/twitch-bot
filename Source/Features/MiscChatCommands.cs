@@ -17,6 +17,7 @@ public class MiscChatCommands {
 		ChatCommand.Register(SocialMediaCommand);
 		ChatCommand.Register(WhoAmICommand);
 		ChatCommand.Register(PayPalCommand);
+		ChatCommand.Register(ModsCommand);
 
 	}
 
