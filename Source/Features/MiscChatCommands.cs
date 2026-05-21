@@ -50,4 +50,9 @@ public class MiscChatCommands {
 		await message.Reply($"If you'd like to support the channel, you can donate via PayPal! https://paypal.me/rawreltv");
 	}
 
+	[ChatCommand("mods")]
+	public static async Task ModsCommand(Message message) {
+		await message.Reply($"Rawrel is playing with Pyanodons Modpack, Squeak Through 2, Pipe Visualization Overlay, Milestones, LTN Manager, LTN - Logistics Train Network, Factorio Libary, and Even Distribution Disco Science.");
+	}
+
 }
