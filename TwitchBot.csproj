@@ -41,7 +41,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.Extensions.Configuration" Version="11.0.0" />
-		<PackageReference Include="MongoDB.Driver" Version="3.14.0" />
+		<PackageReference Include="MongoDB.Driver" Version="3.14.1" />
 		<PackageReference Include="MySql.Data" Version="26.10.0" />
 		<PackageReference Include="StackExchange.Redis" Version="3.4.35" />
 
